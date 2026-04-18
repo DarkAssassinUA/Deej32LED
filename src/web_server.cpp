@@ -232,7 +232,7 @@ function doConn(){
     .catch(()=>{msg.textContent='Ошибка';msg.className='msg er';go.disabled=false;});
 }
 </script></body></html>)END";
-        req->send_P(200, "text/html", WIFI_PAGE);
+        req->send(200, "text/html", WIFI_PAGE);
     });
 
     // ---- /update POST — HTTP OTA ----
@@ -406,7 +406,7 @@ function startCloud(url){
 
 </script>
 </body></html>)END";
-        req->send_P(200, "text/html", OTA_PAGE);
+        req->send(200, "text/html", OTA_PAGE);
     });
 
     // ---- / — Главный дашборд ----
@@ -588,7 +588,7 @@ async function refresh(){
 refresh();setInterval(refresh,300);
 </script>
 </body></html>)END";
-        req->send_P(200, "text/html", PAGE);
+        req->send(200, "text/html", PAGE);
     });
 
     httpServer.begin();

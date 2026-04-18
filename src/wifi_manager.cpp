@@ -174,7 +174,7 @@ function doConn(){
 }
 scan();
 </script></body></html>)END";
-        req->send_P(200, "text/html", AP_PAGE);
+        req->send(200, "text/html", AP_PAGE);
     });
 
     // Редирект всего остального на портал
