@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deej32Led &mdash; Web Installer</title>
+  <!-- Скрипт ESP Web Tools -->
+  <script type="module" src="https://unpkg.com/esp-web-tools@10.0.1/dist/web/install-button.js?module"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #0d0f18; color: #fff; padding: 10vh 20px; margin: 0; }
+    .card { background: #191c2a; padding: 40px; border-radius: 20px; max-width: 450px; margin: 0 auto; border: 1px solid #252840; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    h1 { color: #a78bfa; margin-top: 0; }
+    p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 30px; }
+    .note { font-size: 0.8rem; color: #64748b; margin-top: 20px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>&#128640; Deej32Led Installer</h1>
+    <p>Вы можете прошить вашу плату ESP32 прямо из браузера. <br><br>Подключите плату по USB-кабелю и нажмите кнопку ниже (работает только в Google Chrome или Microsoft Edge).</p>
+    
+    <!-- Компонент кнопки прошивки -->
+    <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+    
+    <span class="note">Если плата не подключается автоматически, зажмите кнопку <b>BOOT</b> на ESP32 при подключении кабеля.</span>
+  </div>
+</body>
+</html>

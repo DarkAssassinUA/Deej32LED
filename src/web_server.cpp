@@ -5,6 +5,7 @@
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 #include <Update.h>
+#include "ota_manager.h"
 
 // ============================================================
 // HTTP СЕРВЕР УПРАВЛЕНИЯ (STA режим)
@@ -271,6 +272,18 @@ function doConn(){
             }
         });
 
+    // ---- /update/url POST — Обновление по ссылке (GitHub OTA) ----
+    httpServer.on("/update/url", HTTP_POST, [](AsyncWebServerRequest *req) {
+        if (req->hasParam("url", true)) {
+            String url = req->getParam("url", true)->value();
+            req->send(200, "application/json", "{\"ok\":true,\"msg\":\"Запущен процесс обновления с облака...\"}");
+            delay(500);
+            startCloudOTA(url);
+        } else {
+            req->send(400, "application/json", "{\"ok\":false,\"msg\":\"Не указан URL\"}");
+        }
+    });
+
     // ---- /update GET — OTA страница ----
     httpServer.on("/update", HTTP_GET, [](AsyncWebServerRequest *req) {
         static const char OTA_PAGE[] PROGMEM = R"END(<!DOCTYPE html><html lang="ru">
@@ -293,6 +306,7 @@ h1{font-size:1.3rem;color:#a78bfa;margin-bottom:6px}
 input[type=file]{display:none}
 .btn{width:100%;margin-top:18px;padding:12px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .2s;letter-spacing:.03em}
 .btn:disabled{opacity:.4;cursor:default}
+.btn-gh{background:linear-gradient(135deg,#1f2937,#111827);box-shadow:0 0 12px #0004;margin-top:10px}
 .prog{margin-top:18px;display:none}
 .bar-wrap{background:#0d0f18;border-radius:6px;height:8px;overflow:hidden;margin-top:6px}
 .bar{height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:6px;transition:width .2s}
@@ -306,19 +320,26 @@ input[type=file]{display:none}
 <div class="card">
   <h1>&#128640; OTA Update</h1>
   <div class="sub">Deej32Led &mdash; загрузка прошивки по воздуху</div>
+  
   <div class="drop" id="drop" onclick="document.getElementById('fw').click()">
     <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="1.5">
       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
     </svg>
     <strong id="fname">Выберите .bin файл</strong>
-    <p>или перетащите сюда</p>
+    <p>или перетащите сюда (Ручное обновление)</p>
     <input type="file" id="fw" accept=".bin">
   </div>
   <button class="btn" id="btn" disabled onclick="doFlash()">Загрузить прошивку</button>
+  
+  <hr style="border:none;border-top:1px solid #252840;margin:20px 0">
+  
+  <button class="btn btn-gh" onclick="checkGithub()">&#128269; Проверить обновления на GitHub</button>
+  
   <div class="prog" id="prog">
     <div class="bar-wrap"><div class="bar" id="bar"></div></div>
-    <div class="msg" id="msg"></div>
   </div>
+  <div class="msg" id="msg"></div>
+
   <a class="back" href="/">&larr; Назад в панель управления</a>
 </div>
 <script>
@@ -340,6 +361,49 @@ function doFlash(){
   xhr.onerror=()=>{msg.textContent='Ошибка соединения';msg.className='msg er';};
   xhr.send(fd);
 }
+
+function checkGithub(){
+  const msg=document.getElementById('msg');
+  msg.innerHTML='<span style="display:inline-block;animation:sp .65s linear infinite;">&#8987;</span> Поиск обновлений...'; 
+  msg.className='msg';
+  // Если у вас свой форк — замените DarkAssassinUA/Deej32Led на свои данные!
+  Promise.all([
+    fetch('/data').then(r=>r.json()),
+    fetch('https://api.github.com/repos/DarkAssassinUA/Deej32LED/releases/latest').then(r=>r.json())
+  ]).then(([d, gh]) => {
+    let cur = (d.version||'0.0').replace('v','');
+    let fresh = (gh.tag_name||'0.0').replace('v','');
+    if (fresh !== cur && gh.assets) {
+        let binAsset = gh.assets.find(a => a.name.endsWith('.bin'));
+        if(binAsset) {
+            msg.innerHTML = `Доступна версия <b>v${fresh}</b>! <br><button onclick="startCloud('${binAsset.browser_download_url}')" style="margin-top:10px;padding:8px 16px;border-radius:6px;border:none;background:linear-gradient(135deg,#10b981,#34d399);color:#000;font-weight:bold;cursor:pointer">Скачать и Установить \u2193</button>`;
+        } else {
+            msg.textContent = `Доступна версия v${fresh}, но скомпилированный .bin файл не прикреплен к релизу.`;
+        }
+    } else {
+        msg.textContent = 'У вас установлена самая актуальная версия \u2705';
+        msg.className = 'msg ok';
+    }
+  }).catch(e=>{
+    console.error(e);
+    msg.textContent='Ошибка проверки GitHub API =(';
+    msg.className='msg er';
+  });
+}
+
+function startCloud(url){
+  const msg=document.getElementById('msg');
+  msg.innerHTML='Отправка команды контроллеру...'; 
+  const fd=new FormData(); fd.append('url', url);
+  fetch('/update/url', {method:'POST', body:fd}).then(r=>r.json()).then(r=>{
+    if(r.ok) {
+       msg.innerHTML = '<b style="color:#f59e0b">Установка запущена!</b><br>Подождите примерно 30-40 секунд.<br>Следите за <b>оранжевой полосой прогресса</b> на LED-ленте!';
+    } else {
+       msg.textContent = 'Ошибка: ' + r.msg; msg.className='msg er';
+    }
+  }).catch(()=>{msg.textContent='Потеряна связь с устройством...';});
+}
+
 </script>
 </body></html>)END";
         req->send_P(200, "text/html", OTA_PAGE);
