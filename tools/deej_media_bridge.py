@@ -377,9 +377,16 @@ class DeejBridgeApp:
                 if self.is_running:
                     await asyncio.sleep(5)
 
+    def get_icon_path(self):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_path, "icon.png")
+
     def setup_tray(self):
         try:
-            self.tray_icon_img = Image.open(os.path.join("tools", "icon.png"))
+            self.tray_icon_img = Image.open(self.get_icon_path())
             self.tk_icon = ImageTk.PhotoImage(self.tray_icon_img)
             self.root.iconphoto(False, self.tk_icon)
         except Exception:
