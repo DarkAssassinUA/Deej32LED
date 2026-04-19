@@ -193,7 +193,7 @@ function tglL(){localStorage.setItem('lang',cl==='ru'?'en':'ru');location.reload
 <div class="field"><div class="fl"><span class="ru">Название сети (SSID)</span><span class="en">Network Name (SSID)</span></div>
 <input type="text" id="ssid" placeholder="SSID" autocomplete="off"></div>
 <div class="field"><div class="fl"><span class="ru">Пароль</span><span class="en">Password</span></div>
-<input type="password" id="pass" placeholder="<span class="ru">Пароль</span><span class="en">Password</span> Wi-Fi" autocomplete="current-password"></div>
+<input type="password" id="pass" placeholder="Password / Пароль" autocomplete="current-password"></div>
 <button class="go" id="go" onclick="doConn()"><span class="ru">Подключиться</span><span class="en">Connect</span></button>
 <div class="msg" id="msg"></div>
 <a class="back" href="/">&larr; <span class="ru">Назад в панель управления</span><span class="en">Back to dashboard</span></a>
