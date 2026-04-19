@@ -2,7 +2,7 @@
 
 > Wireless (no USB connection needed) volume mixer based on ESP32 with WS2812B visual feedback, Web interface, OTA updates support, and a Captive WiFi portal.
 
-![Version](https://img.shields.io/badge/version-0.75-a78bfa?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.85-a78bfa?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-ESP32-10b981?style=flat-square)
 ![Framework](https://img.shields.io/badge/framework-Arduino-ef4444?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)
@@ -36,6 +36,24 @@ Each slider controls the volume of a physical or virtual audio channel. The LEDs
   - If there is **no Wi-Fi**, the 2nd fader breathes in Blue.
   - If the **client is not connected (DeejNG/Bridge)**, the 3rd fader breathes in Purple.
   - During **OTA downloads via GitHub**, the 1st fader smoothly fills up with White proportional to the progress.
+
+## Screenshots
+
+### 🎛️ Main Web Dashboard
+![Main Dashboard Screenshot Placeholder](link_to_dashboard_screenshot_here.png)
+*Control colors, brightness, and general settings from any device.*
+
+### 🛜 Wi-Fi Configuration Portal
+![WiFi Setup Screenshot Placeholder](link_to_wifi_setup_screenshot_here.png)
+*Captive portal to easily connect Deej32LED to your home network.*
+
+### ☁️ OTA Web Updater
+![OTA Update Screenshot Placeholder](link_to_ota_update_screenshot_here.png)
+*Upload new firmware safely over the air.*
+
+### 💻 PC Python Companion App
+![Companion App Screenshot Placeholder](link_to_companion_screenshot_here.png)
+*Assign hardware volume gestures to mediakeys using the included companion bridge.*
 
 ### Web Control Panel (Dashboard)
 - Accessible at **http://deej32led.local** (via mDNS) or via the IP address assigned by your router.
@@ -113,6 +131,11 @@ The easiest way to flash the firmware onto a new board is via the web installer.
 3. Click **Connect**, select your device's COM port, and confirm the installation.  
    *(Note: if the process won't start, hold down the `BOOT` button on the ESP32 upon your first connection).*
 4. Wait for the installation to finish and proceed to "First boot — Connecting the device to the router".
+
+### 📦 Precompiled Binaries (Easiest Method)
+You can find ready-to-use binaries in the **[Releases](https://github.com/DarkAssassinUA/Deej32Led/releases)** section of this repository:
+- `Deej32LED_0.85.bin` — The compiled firmware ready to be flashed.
+- `Deej32LED_Companion.exe` — The compiled Windows executable for the PC companion script.
 
 ### Method 2: Manual Build via PlatformIO (For Developers)
 

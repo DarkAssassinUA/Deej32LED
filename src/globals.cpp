@@ -3,7 +3,7 @@
 // ============================================================
 // МЕТАДАННЫЕ
 // ============================================================
-const char    *version = "0.75";
+const char    *version = "0.85";
 const char    *AP_SSID = "Deej32Led-Setup";
 const uint16_t WS_PORT = WS_PORT_NUM;
 const int      sensorPins[NUM_SLIDERS] = {36, 39, 34, 35, 32};
