@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,17 +12,39 @@
     h1 { color: #a78bfa; margin-top: 0; }
     p { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 30px; }
     .note { font-size: 0.8rem; color: #64748b; margin-top: 20px; display: block; }
+    #lang-btn { position: absolute; top: 20px; right: 20px; background: #252840; color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+    #lang-btn:hover { background: #a78bfa; color: #000; }
+    
+    html[lang="en"] .ru { display: none !important; }
+    html[lang="ru"] .en { display: none !important; }
   </style>
 </head>
-<body>
+<body onload="initLang()">
+  <button id="lang-btn" onclick="toggleLang()">🇬🇧 EN</button>
+
   <div class="card">
     <h1>&#128640; Deej32Led Installer</h1>
-    <p>Вы можете прошить вашу плату ESP32 прямо из браузера. <br><br>Подключите плату по USB-кабелю и нажмите кнопку ниже (работает только в Google Chrome или Microsoft Edge).</p>
+    <p class="ru">Вы можете прошить вашу плату ESP32 прямо из браузера. <br><br>Подключите плату по USB-кабелю и нажмите кнопку ниже (работает только в браузере платформы Chromium, как Chrome или Edge).</p>
+    <p class="en">You can flash your ESP32 board directly from the browser. <br><br>Connect the board via USB cable and click the button below (works only in Chromium-based browsers like Chrome or Edge).</p>
     
     <!-- Компонент кнопки прошивки -->
     <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
     
-    <span class="note">Если плата не подключается автоматически, зажмите кнопку <b>BOOT</b> на ESP32 при подключении кабеля.</span>
+    <span class="note ru">Если плата не подключается автоматически, зажмите кнопку <b>BOOT</b> на ESP32 при подключении кабеля.</span>
+    <span class="note en">If the board does not boot into flash mode automatically, hold the <b>BOOT</b> button on the ESP32 while connecting the cable.</span>
   </div>
+
+  <script>
+    let lang = localStorage.getItem('lang') || (navigator.language.startsWith('ru') ? 'ru' : 'en');
+    function initLang() {
+        document.documentElement.lang = lang;
+        document.getElementById('lang-btn').innerHTML = lang === 'en' ? '🇷🇺 RU' : '🇬🇧 EN';
+    }
+    function toggleLang() {
+        lang = lang === 'en' ? 'ru' : 'en';
+        localStorage.setItem('lang', lang);
+        initLang();
+    }
+  </script>
 </body>
 </html>
