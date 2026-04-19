@@ -14,9 +14,18 @@
 
 ---
 
+## Acknowledgements & Hardware
+
+This firmware was specifically built to be coupled with the following awesome projects:
+- **Hardware & 3D Case**: [Volume Mixer 5 Channel Deej](https://makerworld.com/en/models/419682-volume-mixer-5-channel-deej) — Used as the physical assembly and enclosure.
+- **PC Control Application**: [DeejNG](https://github.com/jimmyeao/DeejNG) — The primary PC client used to handle audio routing over the network.
+- **WebSocket Protocol**: The WebSocket implementation logic was adapted from [OledDeej](https://github.com/jimmyeao/OledDeej).
+
+---
+
 ## What is it?
 
-Deej32Led is firmware for the ESP32 that turns 5 potentiometers into a hardware volume mixer for your PC. The device connects via Wi-Fi using WebSocket to [deejng](https://github.com/nicholasgasior/deejng) (or compatible clients) and provides real-time visual feedback using a WS2812B LED strip.
+Deej32Led is firmware for the ESP32 that turns 5 potentiometers into a hardware volume mixer for your PC. The device connects via Wi-Fi using WebSocket to [DeejNG](https://github.com/jimmyeao/DeejNG) (or compatible clients) and provides real-time visual feedback using a WS2812B LED strip.
 
 Each slider controls the volume of a physical or virtual audio channel. The LEDs smoothly display the current volume level, show peak values, and can be customized with different color themes directly from a built-in web dashboard, without needing to reprogram the device.
 
