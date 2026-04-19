@@ -324,13 +324,12 @@ class DeejBridgeApp:
                     self.logger.info(T(self.config, 'conn_ok'))
                     
                     while self.is_running:
+                        # Таймаут позволяет прервать цикл при остановке программы
                         try:
-                            # Таймаут позволяет прервать цикл при остановке программы
-                            try:
-                                raw = await asyncio.wait_for(ws.recv(), timeout=1.0)
-                            except asyncio.TimeoutError:
-                                await ws.send(json.dumps({"type": "ping"}))
-                                continue
+                            raw = await asyncio.wait_for(ws.recv(), timeout=1.0)
+                        except asyncio.TimeoutError:
+                            await ws.send(json.dumps({"type": "ping"}))
+                            continue
                             
                         try:
                             msg = json.loads(raw)
