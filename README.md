@@ -1,4 +1,4 @@
-# Deej32Led
+# Deej32LED
 
 > Wireless (no USB connection needed) volume mixer based on ESP32 with WS2812B visual feedback, Web interface, OTA updates support, and a Captive WiFi portal.
 
