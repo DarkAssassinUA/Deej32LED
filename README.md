@@ -40,19 +40,23 @@ Each slider controls the volume of a physical or virtual audio channel. The LEDs
 ## Screenshots
 
 ### 🎛️ Main Web Dashboard
-![Main Dashboard Screenshot Placeholder](link_to_dashboard_screenshot_here.png)
+<img width="2560" height="1267" alt="image" src="https://github.com/user-attachments/assets/b6c40f82-59fd-45f6-8448-4087294e2d54" />
+
 *Control colors, brightness, and general settings from any device.*
 
 ### 🛜 Wi-Fi Configuration Portal
-![WiFi Setup Screenshot Placeholder](link_to_wifi_setup_screenshot_here.png)
+<img width="2560" height="1267" alt="image" src="https://github.com/user-attachments/assets/ec5e7e7d-e228-4b51-9db0-2c4294f5ca74" />
+
 *Captive portal to easily connect Deej32LED to your home network.*
 
 ### ☁️ OTA Web Updater
-![OTA Update Screenshot Placeholder](link_to_ota_update_screenshot_here.png)
+<img width="2560" height="1267" alt="image" src="https://github.com/user-attachments/assets/0ca9d312-eaf9-4bb6-838f-36559de23114" />
+
 *Upload new firmware safely over the air.*
 
 ### 💻 PC Python Companion App
-![Companion App Screenshot Placeholder](link_to_companion_screenshot_here.png)
+<img width="702" height="732" alt="image" src="https://github.com/user-attachments/assets/7f02fda5-fefb-43b9-a0a2-e9427a4c7926" />
+
 *Assign hardware volume gestures to mediakeys using the included companion bridge.*
 
 ### Web Control Panel (Dashboard)
