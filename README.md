@@ -1,235 +1,237 @@
 # Deej32Led
 
-> Беспроводной (без привязки по USB) микшер громкости на базе ESP32 с обратной связью на светодиодах WS2812B, веб-интерфейсом, поддержкой OTA-обновлений и порталом настройки WiFi.
+> Wireless (no USB connection needed) volume mixer based on ESP32 with WS2812B visual feedback, Web interface, OTA updates support, and a Captive WiFi portal.
 
 ![Version](https://img.shields.io/badge/version-0.75-a78bfa?style=flat-square)
 ![Platform](https://img.shields.io/badge/platform-ESP32-10b981?style=flat-square)
 ![Framework](https://img.shields.io/badge/framework-Arduino-ef4444?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)
 
+[🇷🇺 **Русская версия**](README_ru.md)
+
 > [!TIP]  
-> 🚀 **Установка в 1 клик:** Теперь вы можете прошить плату ESP32 через USB прямо из вашего браузера: **[Перейти к Web-установщику](https://darkassassinua.github.io/Deej32LED/)**
+> 🚀 **1-Click Installation:** You can now flash the ESP32 board via USB directly from your browser: **[Go to Web Installer](https://darkassassinua.github.io/Deej32LED/)**
 
 ---
 
-## Что это?
+## What is it?
 
-Deej32Led — это прошивка для ESP32, которая превращает 5 потенциометров в аппаратный микшер громкости для вашего ПК. Устройство подключается по Wi-Fi через WebSocket к [deejng](https://github.com/nicholasgasior/deejng) (или совместимым клиентам) и обеспечивает визуальную обратную связь в реальном времени с помощью светодиодной ленты WS2812B.
+Deej32Led is firmware for the ESP32 that turns 5 potentiometers into a hardware volume mixer for your PC. The device connects via Wi-Fi using WebSocket to [deejng](https://github.com/nicholasgasior/deejng) (or compatible clients) and provides real-time visual feedback using a WS2812B LED strip.
 
-Каждый слайдер регулирует громкость одного физического или виртуального аудиоканала. Светодиоды плавно отображают текущий уровень громкости, показывают пиковые значения и могут быть настроены в разных цветовых темах прямо из встроенной веб-панели без необходимости перепрограммировать устройство.
-
----
-
-## Особенности
-
-### Светодиоды (LED)
-- **12 светодиодов на канал** (5 каналов × 12 = 60 штук), которые отображают громкость от 0 до 100%.
-- **Плавные переходы** — встроенная плавная интерполяция (lerp) при изменении громкости убирает дергание.
-- **Индикация пиков (Peak hold)** — пиковый светодиод задерживается на 700 мс, затем плавно падает (по 1 светодиоду каждые 40 мс). Распознается по чуть более темному оттенку.
-- **Тусклое свечение нулевой позиции** — первый светодиод мягко светится даже при убранном в ноль слайдере, чтобы вы всегда видели, где находится начало шкалы.
-- **12 цветовых тем** — можно применить индивидуальную тему для каждого канала или одну глобальную ко всем сразу из дашборда.
-- **VU-метр (эквалайзер)** — опциональное наложение уровня звука, получаемого от ПК (через `vu` сообщения по WebSocket).
-- **Загрузочная анимация** — красивая «радуга» с затуханием при подаче питания.
-- **Индикация статуса** — лента гаснет и использует индикационные фейдеры при потере связи:
-  - Если **нет Wi-Fi**, второй фейдер дышит синим.
-  - Если **клиент не подключен (DeejNG/Bridge)**, третий фейдер дышит фиолетовым.
-  - При **скачивании OTA с GitHub**, первый фейдер плавно заполняется белым цветом пропорционально прогрессу.
-
-### Веб-панель управления (Дашборд)
-- Доступна по адресу **http://deej32led.local** (через mDNS) или по выданному роутером IP-адресу.
-- **Двуязычный интерфейс** — поддерживается русский и английский с переключением на лету и автоопределением по языку браузера.
-- **Индивидуальный выбор темы** — интерактивные палитры из 12 тем для каждого канала.
-- **Глобальные темы** — применение выбранной схемы ко всем каналам устройства в 1 клик.
-- **Ползунок яркости** — регулировка яркости ленты (5–255) с сохранением в реальном времени.
-- **Включение / выключение VU-метра**.
-- Настройки автоматически сохраняются во внутреннюю память (EEPROM).
-
-### Компаньон-мост на ПК (Python)
-- В папке `tools` находится **`deej_media_bridge.py`** — GUI утилита (также с рус/англ интерфейсом) для работы с жестами. 
-- **Аппаратные жесты ползунками:** при резком передергивании ползунка вверх-вниз или вниз-вверх (отдельные события *gbak* и *gcon*) вы можете назначить сочетания горячих клавиш или медиа-кнопки (Play, Next, Prev, Mute) с помощью моста.
-
-### Подключение и сеть
-- **Веб-сокет (WebSocket) на порту `8765`** — полная совместимость с протоколом **deejng / OledDeej**.
-- **mDNS** — не нужно искать локальный сетевой IP, просто введите `deej32led.local`.
-- **Captive-портал (Режим точки доступа)** — при первом включении или потере сети ESP32 создает собственную открытую точку доступа с именем `Deej32Led-Setup` (IP: 192.168.4.1). Там расположен красивый интерфейс для выбора и сохранения данных вашей Wi-Fi сети.
-- **Асинхронный поиск сетей** — скан Wi-Fi эфира работает в главном цикле `loop()`, предотвращая любые сработавшие сторожевые таймеры (Watchdog timeout) и зависания веб-сервера.
-
-### OTA-обновления (Прошивка "По воздуху")
-- **Из среды PlatformIO** (`esp-ota`) — вызовом команды `pio run -e esp32dev_ota -t upload` из терминала.
-- **Через веб-браузер (HTTP OTA)** — зайдите на страницу `http://deej32led.local/update`. Можно просто перетащить (Drag & Drop) файл прошивки `.bin`. Процесс загрузки будет визуализирован зеленой заливкой на светодиодах.
-
-### Энергосбережение
-- Частота камня снижена со стандартных 240 до **80 МГц** (экономит ~50 мА) — этого более чем достаточно для плавной работы интерфейсов и ленты.
-- Включен **WiFi Modem Sleep** в режиме подключения (позволяет экономить 50–80 мА во время микропауз в передаче данных).
-- Совокупно, устройство хорошо подходит для портативной работы от литиевой батареи, например формата 18650.
+Each slider controls the volume of a physical or virtual audio channel. The LEDs smoothly display the current volume level, show peak values, and can be customized with different color themes directly from a built-in web dashboard, without needing to reprogram the device.
 
 ---
 
-## Схема сборки и комплектующие
+## Features
 
-| Деталь | Пояснение |
+### LEDs (Visual Feedback)
+- **12 LEDs per channel** (5 channels × 12 = 60 LEDs in total), showing volume from 0 to 100%.
+- **Smooth transitions** — built-in smooth interpolation (lerp) when changing volume removes any visual jitter.
+- **Peak hold** — the peak LED holds its position for 700 ms, then smoothly falls (1 LED every 40 ms). Easily recognizable by a slightly darker tint.
+- **Dim zero-position glow** — the very first LED softly glows even when the slider is at zero, so you can always see where the scale begins.
+- **12 color themes** — apply an individual theme to each channel or a global one to all of them at once from the dashboard.
+- **VU-meter (Equalizer)** — optional sound level overlay received from the PC (via `vu` WebSocket messages).
+- **Boot animation** — a beautiful fading rainbow effect upon powering on.
+- **Status indicators** — the strip turns off and uses indicator faders upon connection loss:
+  - If there is **no Wi-Fi**, the 2nd fader breathes in Blue.
+  - If the **client is not connected (DeejNG/Bridge)**, the 3rd fader breathes in Purple.
+  - During **OTA downloads via GitHub**, the 1st fader smoothly fills up with White proportional to the progress.
+
+### Web Control Panel (Dashboard)
+- Accessible at **http://deej32led.local** (via mDNS) or via the IP address assigned by your router.
+- **Bilingual Interface** — supports Russian and English with on-the-fly switching and language auto-detection from the browser.
+- **Individual theme selection** — interactive palettes with 12 themes for each channel.
+- **Global themes** — apply a selected color scheme to all channels in 1 click.
+- **Brightness slider** — adjust strip brightness (5–255) with real-time saving.
+- **Enable / Disable VU-meter**.
+- Settings are saved automatically to the internal memory (EEPROM).
+
+### PC Companion Bridge (Python)
+- Inside the `tools` folder is **`deej_media_bridge.py`** — a UI utility (also with a bilingual interface) for gesture support. 
+- **Hardware slider gestures:** by quickly pulling a slider up-and-down or down-and-up (distinct *gbak* and *gcon* events), you can assign hotkeys or media-keys (Play, Next, Prev, Mute) using the bridge.
+
+### Connectivity and Network
+- **WebSocket on port `8765`** — fully compatible with the **deejng / OledDeej** protocol.
+- **mDNS** — no need to search for local network IPs, just type `deej32led.local` in your browser.
+- **Captive portal (Access Point Mode)** — upon first boot or network loss, the ESP32 creates an open hotspot named `Deej32Led-Setup` (IP: 192.168.4.1). Inside, there is an intuitive web interface for selecting and saving your Wi-Fi credentials.
+- **Asynchronous network scanning** — Wi-Fi scanning runs asynchronously in the main `loop()`, preventing any Watchdog timeouts and web server freezes.
+
+### OTA Updates (Over-The-Air)
+- **Via PlatformIO** (`esp-ota`) — by calling `pio run -e esp32dev_ota -t upload` from the terminal.
+- **Via Web browser (HTTP OTA)** — go to `http://deej32led.local/update`. You can easily Drag & Drop the `.bin` firmware file.
+
+### Power Saving
+- CPU frequency is reduced from the standard 240 MHz to **80 MHz** (saves ~50 mA) — this is more than enough for buttery-smooth interface and LED performance.
+- Enables **WiFi Modem Sleep** in station mode (saves another 50–80 mA during micro-pauses in data transfer).
+- Overall, this makes the device well-suited for portable operation from a lithium battery, like an 18650 cell.
+
+---
+
+## Hardware and Components
+
+| Component | Description |
 |------|------|
-| Микроконтроллер | Любая отладочная плата ESP32 (например, 30-pin или 38-pin DevKit Modules) |
-| Светодиодная лента | WS2812B, 60 диодов. Рекомендуется разделить по 12 шт. на 5 слайдеров. |
-| Потенциометры | 5 штук × линейные переменные резисторы 10 кОм |
-| Пин управления лентой | Назначается на GPIO **13** |
-| Пины слайдеров | GPIO **36, 39, 34, 35, 32** (Это ADC1, который безконфликтен с Wi-Fi) |
+| Microcontroller | Any ESP32 dev board (e.g., 30-pin or 38-pin DevKit Modules) |
+| LED Strip | WS2812B, 60 LEDs. Best if split into 12 LEDs per 5 sliders. |
+| Potentiometers | 5 pieces × linear slide potentiometers (10 kOhm) |
+| LED Control Pin | Assigned to GPIO **13** |
+| Slider Pins | GPIO **36, 39, 34, 35, 32** (These are ADC1, which don't conflict with Wi-Fi) |
 
-### Разводка контактов (Wiring)
+### Wiring Guide
 
 ```text
-ESP32           Лента WS2812B
+ESP32           WS2812B Strip
 ─────           ─────────────
-GPIO 13  ───►  DIN (Информационный вход)
+GPIO 13  ───►  DIN (Data In)
 5V       ───►  5V
 GND      ───►  GND
 
-ESP32           Потенциометры (×5 штук)
+ESP32           Potentiometers (×5 pcs)
 ─────           ───────────────────
-3.3V     ──── Контакт 1 (подключить параллельно ко всем ползункам)
-GPIO 36  ──── Контакт 2 (слайдер №1, центральный пин/ползунок)
-GPIO 39  ──── Контакт 2 (слайдер №2)
-GPIO 34  ──── Контакт 2 (слайдер №3)
-GPIO 35  ──── Контакт 2 (слайдер №4)
-GPIO 32  ──── Контакт 2 (слайдер №5)
-GND      ──── Контакт 3 (подключить параллельно ко всем)
+3.3V     ──── Pin 1 (connect in parallel to all sliders)
+GPIO 36  ──── Pin 2 (Slider #1, center pin / wiper)
+GPIO 39  ──── Pin 2 (Slider #2)
+GPIO 34  ──── Pin 2 (Slider #3)
+GPIO 35  ──── Pin 2 (Slider #4)
+GPIO 32  ──── Pin 2 (Slider #5)
+GND      ──── Pin 3 (connect in parallel to all sliders)
 ```
 
 > [!NOTE]
-> Контакты 36, 39, 34, 35 на плате ESP32 спроектированы **только под вход** (input-only). Встроенные подтягивающие резисторы в них отсутствуют на аппаратном уровне. Таким образом, использование дополнительных внешних резисторов для этой сборки вообще не требуется.
+> Pins 36, 39, 34, and 35 on the ESP32 board are designed as **input-only**. They lack integrated pull-up hardware resistors. Because of this, using any external resistors for this particular build is absolutely unneeded.
 
 ---
 
-## Инструкция по сборке, прошивке и запуску
+## Flashing and Setup Instructions
 
-### Способ 1: Прошивка в один клик (Web Installer) — Рекомендуется
+### Method 1: 1-Click Flash (Web Installer) — Recommended
 
-Самый простой способ загрузить прошивку на новую плату — воспользоваться веб-установщиком. Подготовка среды разработки не требуется.
+The easiest way to flash the firmware onto a new board is via the web installer. No development environment setup needed.
 
-1. Подключите ESP32 к компьютеру по USB-кабелю.
-2. Откройте **[Web-установщик Deej32Led](https://darkassassinua.github.io/Deej32LED/)** в браузере (поддерживаются Chrome, Edge, Opera, Brave).
-3. Нажмите кнопку **Connect**, выберите порт устройства (COM-порт) и подтвердите установку.  
-   *(Примечание: если процесс не начинается, зажмите кнопку `BOOT` на ESP32 во время первого подключения).*
-4. Дождитесь завершения установки и переходите к разделу "Первое включение — Соединяем устройство с роутером".
+1. Connect the ESP32 to your PC via a USB cable.
+2. Open the **[Deej32Led Web Installer](https://darkassassinua.github.io/Deej32LED/)** in your browser (Chrome, Edge, Opera, Brave supported).
+3. Click **Connect**, select your device's COM port, and confirm the installation.  
+   *(Note: if the process won't start, hold down the `BOOT` button on the ESP32 upon your first connection).*
+4. Wait for the installation to finish and proceed to "First boot — Connecting the device to the router".
 
-### Способ 2: Самостоятельная сборка через PlatformIO (Для разработчиков)
+### Method 2: Manual Build via PlatformIO (For Developers)
 
-**Зависимости и софт для сборки:**
-- [PlatformIO](https://platformio.org/) (Рекомендуется расширение для редактора VS Code)
-- [deejng](https://github.com/nicholasgasior/deejng) или любой другой десктопный клиент (OledDeej/Websockets).
+**Dependencies and Build Tools:**
+- [PlatformIO](https://platformio.org/) (VS Code extension recommended)
+- [deejng](https://github.com/nicholasgasior/deejng) or any other desktop client (OledDeej/Websockets).
 
 ```bash
-# 1. Скачайте репозиторий через Git
+# 1. Clone the repository via Git
 git clone https://github.com/DarkAssassinUA/Deej32Led.git
 cd Deej32Led
 
-# 2. Подключите ESP32 по USB-кабелю. Нажмите кнопку Build и затем Upload.
-# Либо через терминал PlatformIO: 
+# 2. Connect ESP32 via USB cable. Click Build and then Upload.
+# Or via PlatformIO terminal:
 pio run -e esp32dev -t upload
-# Примечание: на некоторых платах необходимо зажать кнопку BOOT, пока не появится надпись "Connecting...".
+# Note: some boards require holding the BOOT button until "Connecting..." appears.
 
-# (В будущем) Беспроводная прошивка (когда устройство уже настроено в домашней сети):
+# (Future) Wireless flashing (when device is already setup within your home network):
 pio run -e esp32dev_ota -t upload
 ```
 
-### Первое включение — Соединяем устройство с роутером
+### First Boot — Connecting the Device to the Router
 
-1. Подайте питание на ESP32 (подключенную ленту можно не запитывать).
-2. Светодиоды на краях заморгают желто-красным цветом — это значит устройство ожидает конфигурации. Возьмите смартфон или ноутбук, откройте список сетей Wi-Fi и подключитесь к открытой сети: **`Deej32Led-Setup`**.
-3. Вас должно автоматически перекинуть на страницу авторизации сети. Если этого не произошло, откройте браузер и перейдите на страницу **http://192.168.4.1**.
-4. Нажмите кнопку сканирования, выберите нужную домашнюю сеть из красиво оформленного списка, введите пароль и нажмите **Подключиться**.
-5. Устройство мигнет, сохранит настройки во внутреннюю память и перезапустится в нормальном рабочем режиме. Через пару секунд вы сможете зайти с ПК-клиента.
+1. Power the ESP32 (connecting the LED strip power is optional for now).
+2. The LEDs on the edges will blink red — this indicates the device is waiting for configuration. Grab your smartphone or laptop, open your Wi-Fi networks list, and connect to the open hotspot: **`Deej32Led-Setup`**.
+3. You should be automatically redirected to the captive portal login page. If not, open your browser and navigate to **http://192.168.4.1**.
+4. Click the Scan button, pick your desired home network from the neat list, enter the password, and hit **Connect**.
+5. The device will blink, save your settings to internal memory, and reboot into normal operating mode. In seconds, you will be able to connect via your PC client.
 
-### Настройка deejng (на ПК)
+### Configuring deejng (on PC)
 
-Все что нужно сделать — в конфигурационном файле клиента deejng (на ПК) указать адрес вашего WebSocket:
+All you need to do is specify your WebSocket address within the deejng configuration file:
 ```text
 ws://deej32led.local:8765/ws
 ```
-*(Если mDNS не подхватывается вашим сетевым драйвером — посмотрите выданный IP из монитора порта или списка устройств роутера, например, `ws://192.168.X.X:8765/ws`)*
+*(If mDNS does not resolve via your network drivers — grab the assigned IP from the serial monitor or your router's client list, for instance, `ws://192.168.X.X:8765/ws`)*
 
 ---
 
-## Архитектура файлов исходного кода
+## Source Code Architecture
 
-Проект был специально отрефакторен и разделен на несколько логических независимых модулей для упрощения поддержки:
+The project has been specifically refactored and divided into several distinct logical modules to simplify maintainability:
 
 ```text
 src/
-├── main.cpp          # Главный файл: оставлены только базовые setup() и loop() (~130 строк)
-├── config.h          # Макросы #define, выбор пинов устройств настройки среды
-├── globals.h/.cpp    # Здесь вынесены все глобальные переменные и список матриц цветов (extern)
-├── slider.h          # Сердце механики — класс SliderControl. Тут происходит чтение ADC, математика эффектов float-интерполяции (lerp) и физики удержания пиков (peak hold)
-├── settings.h/.cpp   # Работа с EEPROM хранилищем и радужная загрузочная анимация ленты
-├── led_effects.h/.cpp# Эффекты индикации статуса для бездействующих светодиодов
-├── ws_handler.h/.cpp # Обработчики событий WebSocket
-├── ota_manager.h/.cpp# Инициализация для ArduinoOTA. Инклюд анимации обновления-загрузки "зеленой полосы" на ленте
-├── wifi_manager.h/.cpp# База сетевых интерфейсов. Безопасный асинхронный скан сетей + Captive-портал (точка доступа)
-└── web_server.h/.cpp # HTTP-сервер 80 порта и все статические HTML-веб-интерфейсы на борту (Включая основной Dashboard, страницу /update, /wifi)
+├── main.cpp          # Main file: retains only basic setup() and loop() (~130 lines)
+├── config.h          # Macros, #defines, and pin assignments
+├── globals.h/.cpp    # Externs for global variables and color matrix arrays
+├── slider.h          # Heart of mechanics — SliderControl class. Handles ADC reads, float lerp math, and peak hold physics
+├── settings.h/.cpp   # EEPROM storage routines and the rainbow boot sequence
+├── led_effects.h/.cpp# Status indication effects for idle/disconnected LEDs
+├── ws_handler.h/.cpp # WebSocket event handlers
+├── ota_manager.h/.cpp# ArduinoOTA initialization and HTTP OTA updates
+├── wifi_manager.h/.cpp# Base network interfaces. Safe async WiFi scanning + Captive portal
+└── web_server.h/.cpp # Port 80 HTTP server and all static HTML web-interfaces (including the Dashboard, /update, /wifi)
 ```
 
 ---
 
-## Описание API Дашборда и контроллеров
+## Dashboard and Controls API
 
-| Эндпоинт HTTP | Метод | Описание / Возвращаемое значение |
+| HTTP Endpoint | Method | Description / Returns |
 |----------|--------|-------------|
-| `/` | GET | Отображает основной HTML интерфейс дашборда управления |
-| `/data` | GET | `JSON`: возвращает точное текущее состояние сырых данных ADC ползунков, громкость, все настройки, уровень сигнала и яркость. |
-| `/set?theme=N` | GET | Применяет выбранную тему (ID номер от 0 до 11) сразу ко всем ползункам |
-| `/set?ch=N&theme=M` | GET | Применяет тему (номер от 0 до 11) индивидуально к нужному каналу (N) |
-| `/set?brightness=N`| GET | Задает общую яркость ленты (от 5 до 255) |
-| `/set?vu=0\|1` | GET | Включает (1) или выключает (0) индикацию эквалайзера-перекрытия на ленте |
-| `/wifi` | GET | Интерактивная страница перенастройки Wi-Fi сетей (когда роутер в зоне покрытия) |
-| `/wifi/status` | GET | `JSON`: возвращает название текущей подключенной сети, выданный IP адрес и уровень сигнала (RSSI в dBm) |
-| `/scan` | GET | Подать сигнал контроллеру асинхронно просканировать эфир Wi-Fi |
-| `/scan/result` | GET | Вывести накопленный кэш просканированных сетей (опрос рекомендуется делать через 3 секунды после вызова эндпоинта `/scan`) |
-| `/connect` | POST | Сохраняет в постоянную память (NVS Preferences) параметры `ssid` и `pass` |
-| `/update` | GET / POST | Графическая веб-страница обновления микрокода устройства по OTA, или POST-запрос с `.bin` файлом для системы `Update.h` |
+| `/` | GET | Renders the primary HTML control dashboard |
+| `/data` | GET | `JSON`: returns the exact current state of raw ADC values, volumes, settings, signal strength, and brightness. |
+| `/set?theme=N` | GET | Applies selected theme (ID number from 0 to 11) globally |
+| `/set?ch=N&theme=M` | GET | Applies a theme (M from 0 to 11) individually to a specified channel (N) |
+| `/set?brightness=N`| GET | Sets global LED strip brightness (from 5 to 255) |
+| `/set?vu=0\|1` | GET | Enables (1) or disables (0) the VU-meter overlap on the LEDs |
+| `/wifi` | GET | Interactive Wi-Fi configuration page |
+| `/wifi/status` | GET | `JSON`: returns the currently connected network name, assigned IP, and signal level (RSSI in dBm) |
+| `/scan` | GET | Asynchronously pings the controller to scan the Wi-Fi spectrum |
+| `/scan/result` | GET | Returns the accumulated scanned networks cache (polling recommended 3 seconds post `/scan`) |
+| `/connect` | POST | Commits `ssid` and `pass` credentials to permanent memory (NVS Preferences) |
+| `/update` | GET / POST | Graphic OTA update webpage, or POST payload receiver for `.bin` updates |
 
-### Базовый протокол WebSocket (Порт: 8765)
+### Base WebSocket Protocol (Port: 8765)
 
-**Входящие сообщения (от клиента на стороне ПК):**
+**Incoming Messages (from PC Client):**
 ```json
 { "type": "config", "names": ["Master", "Music", "Browser", "Game", "Mic"] }
 { "type": "state",  "vol": [80,60,40,100,0], "mute": [false,false,false,false,true] }
 { "type": "vu",     "levels": [0.8, 0.3, 0.0, 0.5, 0.0] }
 ```
 
-**Исходящая телеметрия к ПК (постоянная периодическая отправка):**
+**Outgoing Telemetry (Periodic transmission to PC):**
 ```json
 { "type": "update", "vol": [80,60,40,100,0], "mute": [false,false,false,false,true], "bak": [...], "con": [...] }
 ```
 
-**Отладочный вывод через Serial порт на скорости `115200` (совместим с классическим оригинальным приложением `deej`):**
+**Serial Debug Output at `115200` baud (Compatible with the legacy `deej` desktop app):**
 ```text
 512|300|1020|0|756
 ```
 
 ---
 
-## Встроенная палитра цветовых схем ленты
+## Built-in LED Color Palettes
 
-| ID | Наименование темы | Визуальные цвета градиента |
+| ID | Theme Name | Visual Gradient Colors |
 |---|------|--------|
-| **0** | VU Classic | 🟢 Зеленый → 🟡 Желтый → 🔴 Красный |
-| **1** | Aurora | Бирюзовый → Синий → Фиолетовый |
-| **2** | Ember | Красный → Оранжевый → Желтый |
-| **3** | Synthwave | Фиолетовый → Розовый → Ослепительно-белый |
-| **4** | Ocean | Темно-синий → Глубокий голубой |
-| **5** | Forest | Темно-зеленый → Яркий Лайм |
-| **6** | Sunset | Яркий Оранжевый → Пурпурный |
-| **7** | Cherry | Малиновый → Снежно-розовый |
-| **8** | Mint | Мятный нежный → Аквамарин |
-| **9** | Ice | Светло-голубой → Белый ледник |
-| **10**| Galaxy | Синий → Космический Фиолетовый → Розовый |
-| **11**| Toxic | Ядовито-желто-зеленый → Желтый |
+| **0** | VU Classic | 🟢 Green → 🟡 Yellow → 🔴 Red |
+| **1** | Aurora | Teal → Blue → Purple |
+| **2** | Ember | Red → Orange → Yellow |
+| **3** | Synthwave | Purple → Pink → Blazing White |
+| **4** | Ocean | Navy Blue → Deep Azure |
+| **5** | Forest | Dark Green → Vivid Lime |
+| **6** | Sunset | Bright Orange → Magenta |
+| **7** | Cherry | Crimson → Snow Pink |
+| **8** | Mint | Gentle Mint → Aquamarine |
+| **9** | Ice | Light Blue → Glacier White |
+| **10**| Galaxy | Blue → Cosmic Violet → Pink |
+| **11**| Toxic | Acid Yellow-Green → Yellow |
 
 ---
 
-## Зависимости проекта библиотек
+## Project Library Dependencies
 
-Описаны в `platformio.ini` файле. Скачиваются при первой сборке платформой PlatformIO в автоматическом режиме:
+Described within the `platformio.ini` file. Downloaded automatically by PlatformIO upon the first build:
 
 ```ini
 lib_deps =
@@ -241,6 +243,6 @@ lib_deps =
 
 ---
 
-## Лицензия
+## License
 
-MIT License. Код полностью свободен к модификации, копированию, редистрибуции в собственных или любых других целях. При желании можете указывать авторов оригинальных концептов.
+MIT License. The source code is completely free to modify, copy, and redistribute for personal or any other purposes. If you wish, feel free to credit the original concept creators.
