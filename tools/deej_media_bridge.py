@@ -17,11 +17,14 @@ import logging
 try:
     import websockets
     import keyboard
+    import pystray
+    from PIL import Image, ImageTk
+    import webbrowser
 except ImportError:
     # Use built-in Tkinter interface to show error before crash
     root = tk.Tk()
     root.withdraw()
-    messagebox.showerror("Dependency Error", "Please install the required libraries:\npip install websockets keyboard")
+    messagebox.showerror("Dependency Error", "Please install the required libraries:\npip install websockets keyboard pystray pillow")
     sys.exit(1)
 
 CONFIG_FILE = "bridge_config.json"
@@ -53,7 +56,10 @@ I18N = {
         'unk_key': 'Неизвестная клавиша: {}',
         'conn_err': '❌ Ошибка соединения: {}. Переподключение через 3с...',
         'crit_err': '❌ Критическая ошибка: {}',
-        'lang': 'Language / Язык:'
+        'lang': 'Language / Язык:',
+        'tray_open_web': '🌐 Открыть Dashboard',
+        'tray_show': 'Развернуть окно',
+        'tray_exit': 'Выход'
     },
     'en': {
         'dep_err': 'Dependency Error. Please install:\npip install websockets keyboard',
@@ -81,7 +87,10 @@ I18N = {
         'unk_key': 'Unknown key: {}',
         'conn_err': '❌ Connection error: {}. Reconnecting in 3s...',
         'crit_err': '❌ Critical error: {}',
-        'lang': 'Language / Язык:'
+        'lang': 'Language / Язык:',
+        'tray_open_web': '🌐 Open Dashboard',
+        'tray_show': 'Show Window',
+        'tray_exit': 'Exit'
     }
 }
 
@@ -117,10 +126,16 @@ class DeejBridgeApp:
         self.loop = None
         self.ws_thread = None
         
+        self.tray = None
+        self.tray_running = False
+        
         self.action_vars = {}
         
         self.create_widgets()
         self.setup_logging()
+        self.setup_tray()
+
+        self.root.protocol('WM_DELETE_WINDOW', self.hide_window)
         
     def load_config(self):
         if os.path.exists(CONFIG_FILE):
@@ -362,16 +377,60 @@ class DeejBridgeApp:
                 if self.is_running:
                     await asyncio.sleep(5)
 
+    def setup_tray(self):
+        try:
+            self.tray_icon_img = Image.open(os.path.join("tools", "icon.png"))
+            self.tk_icon = ImageTk.PhotoImage(self.tray_icon_img)
+            self.root.iconphoto(False, self.tk_icon)
+        except Exception:
+            self.tray_icon_img = Image.new('RGB', (64, 64), color = (73, 109, 137))
+            
+        menu = pystray.Menu(
+            pystray.MenuItem(T(self.config, 'tray_open_web'), self.open_web),
+            pystray.MenuItem(T(self.config, 'start_bridge'), self.start_bridge_tray),
+            pystray.MenuItem(T(self.config, 'stop_bridge'), self.stop_bridge_tray),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem(T(self.config, 'tray_show'), self.show_window),
+            pystray.MenuItem(T(self.config, 'tray_exit'), self.exit_app)
+        )
+        self.tray = pystray.Icon("DeejBridge", self.tray_icon_img, "Deej32Led Companion", menu)
+
+    def hide_window(self):
+        self.root.withdraw()
+        if not self.tray_running:
+            self.tray_thread = threading.Thread(target=self.run_tray, daemon=True)
+            self.tray_thread.start()
+
+    def run_tray(self):
+        self.tray_running = True
+        self.tray.run()
+
+    def show_window(self, icon=None, item=None):
+        if self.tray_running:
+            self.tray.stop()
+            self.tray_running = False
+        self.root.after(0, self.root.deiconify)
+
+    def exit_app(self, icon=None, item=None):
+        if self.tray_running:
+            self.tray.stop()
+        self.is_running = False
+        if self.loop:
+            self.loop.stop()
+        self.root.after(0, self.root.destroy)
+            
+    def open_web(self, icon=None, item=None):
+        webbrowser.open(f"http://{self.config['host']}")
+        
+    def start_bridge_tray(self, icon=None, item=None):
+        if not self.is_running:
+            self.root.after(0, self.toggle_server)
+
+    def stop_bridge_tray(self, icon=None, item=None):
+        if self.is_running:
+            self.root.after(0, self.toggle_server)
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = DeejBridgeApp(root)
-    # Позволяет gracefully закрыть окно и потоки
-    def on_closing():
-        app.is_running = False
-        if app.loop is not None and app.loop.is_running():
-            app.loop.call_soon_threadsafe(app.loop.stop)
-        root.destroy()
-        
-    root.protocol("WM_DELETE_WINDOW", on_closing)
     root.mainloop()
