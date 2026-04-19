@@ -117,11 +117,11 @@ void setupHttpServer() {
         String pass = req->hasParam("pass", true)
                         ? req->getParam("pass", true)->value() : "";
         if (ssid.isEmpty()) {
-            req->send(400, "application/json", "{\"ok\":false,\"msg\":\"SSID не указан\"}");
+            req->send(400, "application/json", "{\"ok\":false,\"msg\":\"SSID не указан / not specified\"}");
             return;
         }
         saveWiFiCredentials(ssid, pass);
-        req->send(200, "application/json", "{\"ok\":true,\"msg\":\"Сохранено! Перезагружаю...\"}");
+        req->send(200, "application/json", "{\"ok\":true,\"msg\":\"Saved! Rebooting... / Сохранено! Перезагружаю...\"}");
         delay(600);
         ESP.restart();
     });
@@ -172,22 +172,31 @@ input:focus{border-color:#0ea5e9}
 @keyframes sp{to{transform:rotate(360deg)}}
 .back{display:block;text-align:center;margin-top:18px;font-size:.72rem;color:#475569;text-decoration:none}
 .back:hover{color:#38bdf8}
-</style></head>
-<body><div class="card">
-<h1>&#128246; Настройки Wi-Fi</h1>
-<div class="sub">Deej32Led &mdash; управление сетью</div>
-<div class="info" id="info"><div class="msg"><span class="sp"></span>Загрузка...</div></div>
+</style>
+<style>
+[lang="en"] .ru,[lang="ru"] .en{display:none !important;}
+.lang-btn{position:absolute;top:15px;right:15px;z-index:99;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1.2rem;font-weight:bold;}
+</style>
+<script>
+let cl=localStorage.getItem('lang')||(navigator.language.startsWith('ru')?'ru':'en');
+document.documentElement.lang=cl;
+function tglL(){localStorage.setItem('lang',cl==='ru'?'en':'ru');location.reload();}
+</script></head>
+<body><button class="lang-btn" onclick="tglL()" title="Toggle Language"><span class="ru">🇬🇧 EN</span><span class="en">🇷🇺 RU</span></button><div class="card">
+<h1>&#128246; <span class="ru">Настройки Wi-Fi</span><span class="en">Wi-Fi Settings</span></h1>
+<div class="sub">Deej32Led &mdash; <span class="ru">управление сетью</span><span class="en">network management</span></div>
+<div class="info" id="info"><div class="msg"><span class="sp"></span><span class="ru">Загрузка...</span><span class="en">Loading...</span></div></div>
 <div class="sep"></div>
-<div class="lbl">Сменить сеть</div>
-<div class="nets" id="nets"><div class="msg" style="padding:12px 0">Нажмите «Сканировать» для поиска сетей</div></div>
-<button class="rb" id="rb" onclick="scan()">&#8635;&nbsp;Сканировать сети</button>
-<div class="field"><div class="fl">Название сети (SSID)</div>
-<input type="text" id="ssid" placeholder="Выберите из списка или введите вручную" autocomplete="off"></div>
-<div class="field"><div class="fl">Пароль</div>
-<input type="password" id="pass" placeholder="Пароль Wi-Fi" autocomplete="current-password"></div>
-<button class="go" id="go" onclick="doConn()">Подключиться</button>
+<div class="lbl"><span class="ru">Сменить сеть</span><span class="en">Change Network</span></div>
+<div class="nets" id="nets"><div class="msg" style="padding:12px 0"><span class="ru">Нажмите «Сканировать» для поиска сетей</span><span class="en">Click "Scan" to find networks</span></div></div>
+<button class="rb" id="rb" onclick="scan()">&#8635;&nbsp;<span class="ru">Сканировать сети</span><span class="en">Scan Networks</span></button>
+<div class="field"><div class="fl"><span class="ru">Название сети (SSID)</span><span class="en">Network Name (SSID)</span></div>
+<input type="text" id="ssid" placeholder="SSID" autocomplete="off"></div>
+<div class="field"><div class="fl"><span class="ru">Пароль</span><span class="en">Password</span></div>
+<input type="password" id="pass" placeholder="<span class="ru">Пароль</span><span class="en">Password</span> Wi-Fi" autocomplete="current-password"></div>
+<button class="go" id="go" onclick="doConn()"><span class="ru">Подключиться</span><span class="en">Connect</span></button>
 <div class="msg" id="msg"></div>
-<a class="back" href="/">&larr; Назад в панель управления</a>
+<a class="back" href="/">&larr; <span class="ru">Назад в панель управления</span><span class="en">Back to dashboard</span></a>
 </div>
 <script>
 let ns=[];
@@ -195,25 +204,25 @@ function bars(r){const l=r>-55?4:r>-65?3:r>-75?2:1;return[0,1,2,3].map(i=>`<div 
 fetch('/wifi/status').then(r=>r.json()).then(s=>{
   document.getElementById('info').innerHTML=`
     <div class="irow"><span class="il">SSID</span><span class="iv ok">${s.ssid}</span></div>
-    <div class="irow"><span class="il">IP-адрес</span><span class="iv">${s.ip}</span></div>
-    <div class="irow"><span class="il">Сигнал RSSI</span><span class="iv">${s.rssi} dBm</span></div>`;
-  document.getElementById('ssid').placeholder=s.ssid||'Выберите или введите сеть';
-}).catch(()=>document.getElementById('info').innerHTML='<div class="msg er">Ошибка загрузки</div>');
+    <div class="irow"><span class="il"><span class="ru">IP-адрес</span><span class="en">IP Address</span></span><span class="iv">${s.ip}</span></div>
+    <div class="irow"><span class="il"><span class="ru">Сигнал RSSI</span><span class="en">RSSI Signal</span></span><span class="iv">${s.rssi} dBm</span></div>`;
+  document.getElementById('ssid').placeholder=s.ssid||'Network';
+}).catch(()=>document.getElementById('info').innerHTML='<div class="msg er"><span class="ru">Ошибка загрузки</span><span class="en">Loading error</span></div>');
 function scan(){
   const el=document.getElementById('nets'),rb=document.getElementById('rb');
-  el.innerHTML='<div class="msg"><span class="sp"></span>Сканирование...</div>';rb.disabled=true;
+  el.innerHTML='<div class="msg"><span class="sp"></span><span class="ru">Сканирование...</span><span class="en">Scanning...</span></div>';rb.disabled=true;
   fetch('/scan').then(r=>r.json()).then(a=>{if(a.length)renderNets(a);});
   setTimeout(()=>fetch('/scan/result').then(r=>r.json()).then(a=>renderNets(a))
-    .catch(()=>el.innerHTML='<div class="msg er">Ошибка сканирования</div>').finally(()=>rb.disabled=false),3500);
+    .catch(()=>el.innerHTML='<div class="msg er"><span class="ru">Ошибка сканирования</span><span class="en">Scan error</span></div>').finally(()=>rb.disabled=false),3500);
 }
 function renderNets(a){
   const el=document.getElementById('nets'),rb=document.getElementById('rb');
   rb.disabled=false;
   ns=a.sort((a,b)=>b.rssi-a.rssi);
-  if(!ns.length){el.innerHTML='<div class="msg">Сети не найдены</div>';return;}
+  if(!ns.length){el.innerHTML='<div class="msg"><span class="ru">Сети не найдены</span><span class="en">No networks found</span></div>';return;}
   el.innerHTML=ns.map((n,i)=>`<div class="net" onclick="pick(${i})">
     <div class="ico">${n.secure?'&#128274;':'&#128275;'}</div>
-    <div class="nfo"><div class="nssid">${n.ssid}</div><div class="nmeta">${n.rssi} dBm &bull; ${n.secure?'Защищённая':'Открытая'}</div></div>
+    <div class="nfo"><div class="nssid">${n.ssid}</div><div class="nmeta">${n.rssi} dBm &bull; ${n.secure?'🔐':'🔓'}</div></div>
     <div class="bs">${bars(n.rssi)}</div></div>`).join('');
 }
 function pick(i){
@@ -224,12 +233,12 @@ function pick(i){
 function doConn(){
   const ssid=document.getElementById('ssid').value.trim(),pass=document.getElementById('pass').value;
   const msg=document.getElementById('msg'),go=document.getElementById('go');
-  if(!ssid){msg.textContent='Укажите сеть';msg.className='msg er';return;}
-  go.disabled=true;msg.innerHTML='<span class="sp"></span>Подключение...';msg.className='msg';
+  if(!ssid){msg.textContent=cl==='ru'?'Укажите сеть':'Select a network';msg.className='msg er';return;}
+  go.disabled=true;msg.innerHTML='<span class="sp"></span>'+(cl==='ru'?'Подключение...':'Connecting...');msg.className='msg';
   const fd=new FormData();fd.append('ssid',ssid);fd.append('pass',pass);
   fetch('/connect',{method:'POST',body:fd}).then(r=>r.json())
     .then(r=>{msg.textContent=r.msg;msg.className='msg '+(r.ok?'ok-c':'er');})
-    .catch(()=>{msg.textContent='Ошибка';msg.className='msg er';go.disabled=false;});
+    .catch(()=>{msg.textContent=cl==='ru'?'Ошибка':'Error';msg.className='msg er';go.disabled=false;});
 }
 </script></body></html>)END";
         req->send(200, "text/html", WIFI_PAGE);
@@ -241,8 +250,8 @@ function doConn(){
             bool ok = !Update.hasError();
             AsyncWebServerResponse *resp = req->beginResponse(
                 200, "application/json",
-                ok ? "{\"ok\":true,\"msg\":\"Прошивка загружена! Перезагружаю...\"}" :
-                     "{\"ok\":false,\"msg\":\"Ошибка OTA\"}");
+                ok ? "{\"ok\":true,\"msg\":\"Firmware uploaded! Rebooting... / Прошивка загружена!\"}" :
+                     "{\"ok\":false,\"msg\":\"OTA Error / Ошибка OTA\"}");
             resp->addHeader("Connection", "close");
             req->send(resp);
             if (ok) { delay(500); ESP.restart(); }
@@ -276,11 +285,11 @@ function doConn(){
     httpServer.on("/update/url", HTTP_POST, [](AsyncWebServerRequest *req) {
         if (req->hasParam("url", true)) {
             String url = req->getParam("url", true)->value();
-            req->send(200, "application/json", "{\"ok\":true,\"msg\":\"Запущен процесс обновления с облака...\"}");
+            req->send(200, "application/json", "{\"ok\":true,\"msg\":\"Cloud update started... / Обновление запущено...\"}");
             delay(500);
             startCloudOTA(url);
         } else {
-            req->send(400, "application/json", "{\"ok\":false,\"msg\":\"Не указан URL\"}");
+            req->send(400, "application/json", "{\"ok\":false,\"msg\":\"No URL specified / Не указан URL\"}");
         }
     });
 
@@ -315,32 +324,42 @@ input[type=file]{display:none}
 .back{display:block;text-align:center;margin-top:22px;font-size:.72rem;color:#475569;text-decoration:none}
 .back:hover{color:#a78bfa}
 </style>
+<style>
+[lang="en"] .ru,[lang="ru"] .en{display:none !important;}
+.lang-btn{position:absolute;top:15px;right:15px;z-index:99;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1.2rem;font-weight:bold;}
+</style>
+<script>
+let cl=localStorage.getItem('lang')||(navigator.language.startsWith('ru')?'ru':'en');
+document.documentElement.lang=cl;
+function tglL(){localStorage.setItem('lang',cl==='ru'?'en':'ru');location.reload();}
+</script>
 </head>
 <body>
+<button class="lang-btn" onclick="tglL()" title="Toggle Language"><span class="ru">🇬🇧 EN</span><span class="en">🇷🇺 RU</span></button>
 <div class="card">
   <h1>&#128640; OTA Update</h1>
-  <div class="sub">Deej32Led &mdash; загрузка прошивки по воздуху</div>
+  <div class="sub">Deej32Led &mdash; <span class="ru">загрузка прошивки по воздуху</span><span class="en">over-the-air firmware update</span></div>
   
   <div class="drop" id="drop" onclick="document.getElementById('fw').click()">
     <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="#a78bfa" stroke-width="1.5">
       <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
     </svg>
-    <strong id="fname">Выберите .bin файл</strong>
-    <p>или перетащите сюда (Ручное обновление)</p>
+    <strong id="fname"><span class="ru">Выберите .bin файл</span><span class="en">Select .bin file</span></strong>
+    <p><span class="ru">или перетащите сюда (Ручное обновление)</span><span class="en">or drag and drop here (Manual Update)</span></p>
     <input type="file" id="fw" accept=".bin">
   </div>
-  <button class="btn" id="btn" disabled onclick="doFlash()">Загрузить прошивку</button>
+  <button class="btn" id="btn" disabled onclick="doFlash()"><span class="ru">Загрузить прошивку</span><span class="en">Upload Firmware</span></button>
   
   <hr style="border:none;border-top:1px solid #252840;margin:20px 0">
   
-  <button class="btn btn-gh" onclick="checkGithub()">&#128269; Проверить обновления на GitHub</button>
+  <button class="btn btn-gh" onclick="checkGithub()">&#128269; <span class="ru">Проверить обновления на GitHub</span><span class="en">Check updates on GitHub</span></button>
   
   <div class="prog" id="prog">
     <div class="bar-wrap"><div class="bar" id="bar"></div></div>
   </div>
   <div class="msg" id="msg"></div>
 
-  <a class="back" href="/">&larr; Назад в панель управления</a>
+  <a class="back" href="/">&larr; <span class="ru">Назад в панель управления</span><span class="en">Back to dashboard</span></a>
 </div>
 <script>
 const fw=document.getElementById('fw'),drop=document.getElementById('drop');
@@ -353,18 +372,18 @@ function doFlash(){
   const fd=new FormData(); fd.append('firmware',file,file.name);
   const btn=document.getElementById('btn'),prog=document.getElementById('prog'),
         bar=document.getElementById('bar'),msg=document.getElementById('msg');
-  btn.disabled=true; prog.style.display='block'; msg.textContent='Загрузка...';
+  btn.disabled=true; prog.style.display='block'; msg.textContent=cl==='ru'?'Загрузка...':'Uploading...';
   const xhr=new XMLHttpRequest();
   xhr.open('POST','/update');
   xhr.upload.onprogress=e=>{if(e.lengthComputable){const p=e.loaded*100/e.total;bar.style.width=p+'%';msg.textContent=Math.round(p)+'%';}};
-  xhr.onload=()=>{try{const r=JSON.parse(xhr.responseText);msg.textContent=r.msg;msg.className='msg '+(r.ok?'ok':'er');}catch{msg.textContent='Готово';}};
-  xhr.onerror=()=>{msg.textContent='Ошибка соединения';msg.className='msg er';};
+  xhr.onload=()=>{try{const r=JSON.parse(xhr.responseText);msg.textContent=r.msg;msg.className='msg '+(r.ok?'ok':'er');}catch{msg.textContent=cl==='ru'?'Готово':'Done';}};
+  xhr.onerror=()=>{msg.textContent=cl==='ru'?'Ошибка соединения':'Connection Error';msg.className='msg er';};
   xhr.send(fd);
 }
 
 function checkGithub(){
   const msg=document.getElementById('msg');
-  msg.innerHTML='<span style="display:inline-block;animation:sp .65s linear infinite;">&#8987;</span> Поиск обновлений...'; 
+  msg.innerHTML='<span style="display:inline-block;animation:sp .65s linear infinite;">&#8987;</span> <span class="ru">Поиск обновлений...</span><span class="en">Checking updates...</span>'; 
   msg.className='msg';
   // Если у вас свой форк — замените DarkAssassinUA/Deej32Led на свои данные!
   Promise.all([
@@ -376,32 +395,32 @@ function checkGithub(){
     if (fresh !== cur && gh.assets) {
         let binAsset = gh.assets.find(a => a.name.endsWith('.bin'));
         if(binAsset) {
-            msg.innerHTML = `Доступна версия <b>v${fresh}</b>! <br><button onclick="startCloud('${binAsset.browser_download_url}')" style="margin-top:10px;padding:8px 16px;border-radius:6px;border:none;background:linear-gradient(135deg,#10b981,#34d399);color:#000;font-weight:bold;cursor:pointer">Скачать и Установить \u2193</button>`;
+            msg.innerHTML = `${cl==="ru"?"Доступна версия":"Version"} <b>v${fresh}</b> ${cl==="ru"?"":"is available!"} <br><button onclick="startCloud('${binAsset.browser_download_url}')" style="margin-top:10px;padding:8px 16px;border-radius:6px;border:none;background:linear-gradient(135deg,#10b981,#34d399);color:#000;font-weight:bold;cursor:pointer">${cl==='ru'?'Скачать и Установить \u2193':'Download & Install \u2193'}</button>`;
         } else {
-            msg.textContent = `Доступна версия v${fresh}, но скомпилированный .bin файл не прикреплен к релизу.`;
+            msg.textContent = cl==="ru"?`Доступна версия v${fresh}, но .bin нет`:`Version v${fresh} has no .bin`;
         }
     } else {
-        msg.textContent = 'У вас установлена самая актуальная версия \u2705';
+        msg.textContent = cl==='ru'?'У вас самая свежая версия ✅':'Latest version is installed ✅';
         msg.className = 'msg ok';
     }
   }).catch(e=>{
     console.error(e);
-    msg.textContent='Ошибка проверки GitHub API =(';
+    msg.textContent=cl==='ru'?'Ошибка проверки GitHub API =(':'GitHub API Check Error';
     msg.className='msg er';
   });
 }
 
 function startCloud(url){
   const msg=document.getElementById('msg');
-  msg.innerHTML='Отправка команды контроллеру...'; 
+  msg.innerHTML=cl==='ru'?'Отправка команды контроллеру...':'Sending command to controller...'; 
   const fd=new FormData(); fd.append('url', url);
   fetch('/update/url', {method:'POST', body:fd}).then(r=>r.json()).then(r=>{
     if(r.ok) {
-       msg.innerHTML = '<b style="color:#f59e0b">Установка запущена!</b><br>Подождите примерно 30-40 секунд.<br>Следите за <b>оранжевой полосой прогресса</b> на LED-ленте!';
+       msg.innerHTML = cl==='ru'?'<b style="color:#f59e0b">Установка запущена!</b><br>Ждите 30-40 сек.<br>Следите за <b>оранжевой полосой</b> на LED!':'<b style="color:#f59e0b">Installation started!</b><br>Wait 30-40 sec.<br>Watch the <b>orange LED bar</b>!';
     } else {
-       msg.textContent = 'Ошибка: ' + r.msg; msg.className='msg er';
+       msg.textContent = (cl==='ru'?'Ошибка: ':'Error: ') + r.msg; msg.className='msg er';
     }
-  }).catch(()=>{msg.textContent='Потеряна связь с устройством...';});
+  }).catch(()=>{msg.textContent=cl==='ru'?'Потеряна связь с устройством...':'Lost connection with device...';});
 }
 
 </script>
@@ -476,13 +495,23 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.25)}
 .cth:hover{transform:scaleY(1.4);opacity:.85}
 footer{font-size:.65rem;text-align:right;color:#1e293b;padding:10px 20px}
 </style>
+<style>
+[lang="en"] .ru,[lang="ru"] .en{display:none !important;}
+.lang-btn{position:absolute;top:15px;right:15px;z-index:99;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1.2rem;font-weight:bold;}
+</style>
+<script>
+let cl=localStorage.getItem('lang')||(navigator.language.startsWith('ru')?'ru':'en');
+document.documentElement.lang=cl;
+function tglL(){localStorage.setItem('lang',cl==='ru'?'en':'ru');location.reload();}
+</script>
 </head>
 <body>
+<button class="lang-btn" onclick="tglL()" title="Toggle Language"><span class="ru">🇬🇧 EN</span><span class="en">🇷🇺 RU</span></button>
 <div class="topbar"><div class="ti">
-  <h1>Deej32Led <span class="sub">control panel</span> <span id="ver" style="font-size:.55rem;color:#334155;font-weight:400;letter-spacing:.06em"></span></h1>
+  <h1>Deej32Led <span class="sub"><span class="ru">панель упр.</span><span class="en">control panel</span></span> <span id="ver" style="font-size:.55rem;color:#334155;font-weight:400;letter-spacing:.06em"></span></h1>
   <div class="ctrls">
     <div class="cg">
-      <div class="cl">Тема подсветки LED</div>
+      <div class="cl"><span class="ru">Тема подсветки LED</span><span class="en">LED Theme</span></div>
       <div class="ths" id="th">
         <button class="tb" data-t="0"><span class="sw" style="background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)"></span>VU Classic</button>
         <button class="tb" data-t="1"><span class="sw" style="background:linear-gradient(90deg,#22d3ee,#3b82f6,#818cf8)"></span>Aurora</button>
@@ -499,7 +528,7 @@ footer{font-size:.65rem;text-align:right;color:#1e293b;padding:10px 20px}
       </div>
     </div>
     <div class="cg">
-      <div class="cl">Яркость</div>
+      <div class="cl"><span class="ru">Яркость</span><span class="en">Brightness</span></div>
       <div class="bwc">
         <input type="range" id="br" min="5" max="255" value="60">
         <span class="bvl" id="bvlbl">60</span>
@@ -513,11 +542,11 @@ footer{font-size:.65rem;text-align:right;color:#1e293b;padding:10px 20px}
   </div>
 </div></div>
 <div class="wrap">
-  <div class="sub2"><span class="dot"></span><span id="ts">подключение...</span>
+  <div class="sub2"><span class="dot"></span><span id="ts"><span class="ru">подключение...</span><span class="en">connecting...</span></span>
     &nbsp;&bull;&nbsp; 100 мс &nbsp;&bull;&nbsp; ADC 10-бит &nbsp;&bull;&nbsp; map(rawAvg,8,1015)</div>
   <div class="grid" id="grid"></div>
 </div>
-<footer>Deej32Led &mdash; calibration &amp; control</footer>
+<footer>Deej32Led &mdash; <span class="ru">настройка</span><span class="en">calibration &amp; control</span></footer>
 <script>
 const CC=['#3b82f6','#8b5cf6','#10b981','#f59e0b','#06b6d4'];
 const TG=['#22c55e,#eab308,#ef4444','#22d3ee,#3b82f6,#818cf8','#dc2626,#f97316,#eab308',
@@ -563,27 +592,27 @@ async function refresh(){
       const lh=Array.from({length:12},(_,j)=>`<div class="led${j<c.leds?' on':''}" title="LED ${j+1}"></div>`).join('');
       const vuRow=cVU?`<hr class="sep"><div class="row"><span class="lbl">VU</span><span class="val">${c.vu}</span></div><div class="bw"><div class="b bu" style="width:${c.vu}%"></div></div>`:'';
       const chT=c.theme!==undefined?c.theme:-1;
-      const cthRow='<div class="cths">'+TG.map((g,t)=>`<div class="cth${t===chT?' on':''}" style="background:linear-gradient(90deg,${g})" onclick="setChTheme(${i},${t})" title="\u0422\u0435\u043c\u0430 ${t}"></div>`).join('')+'</div>';
+      const cthRow='<div class="cths">'+TG.map((g,t)=>`<div class="cth${t===chT?' on':''}" style="background:linear-gradient(90deg,${g})" onclick="setChTheme(${i},${t})" title="${cl==='ru'?'Тема':'Theme'} ${t}"></div>`).join('')+'</div>';
       el.innerHTML=`
         <div class="ct"><span>CH${i+1} &mdash; ${c.name}</span><span class="badge">${c.muted?'MUTE':c.vol+'%'}</span></div>
-        <div class="row"><span class="lbl">Сырой ADC</span><span class="val">${c.rawAvg}</span></div>
+        <div class="row"><span class="lbl"><span class="ru">Сырой</span><span class="en">Raw</span> ADC</span><span class="val">${c.rawAvg}</span></div>
         <div class="bw"><div class="b br" style="width:${(c.rawAvg/1023*100).toFixed(1)}%"></div></div>
         <hr class="sep">
         <div class="row"><span class="lbl">avgPos</span><span class="val">${c.avgPos}</span></div>
         <div class="bw"><div class="b ba" style="width:${(c.avgPos/1023*100).toFixed(1)}%"></div></div>
         <hr class="sep">
-        <div class="row"><span class="lbl">Громкость vol%</span><span class="val">${c.vol}</span></div>
+        <div class="row"><span class="lbl"><span class="ru">Громкость</span><span class="en">Volume</span> vol%</span><span class="val">${c.vol}</span></div>
         <div class="bw"><div class="b bv" style="width:${c.vol}%"></div></div>
         <hr class="sep">
         <div class="row"><span class="lbl">LED (${c.leds}/12)</span><span class="val">${c.leds}</span></div>
         <div class="bw"><div class="b bl" style="width:${(c.leds/12*100).toFixed(1)}%"></div></div>
         <div class="lv">${lh}</div>${vuRow}
         <hr class="sep">
-        <div class="row"><span class="lbl" style="font-size:.6rem">Тема канала</span></div>
+        <div class="row"><span class="lbl" style="font-size:.6rem"><span class="ru">Тема канала</span><span class="en">Channel Theme</span></span></div>
         ${cthRow}`;
     });
     document.getElementById('ts').textContent=new Date().toLocaleTimeString();
-  }catch(e){document.getElementById('ts').textContent='Ошибка: '+e.message;}
+  }catch(e){document.getElementById('ts').textContent=(cl==='ru'?'Ошибка: ':'Error: ')+e.message;}
 }
 refresh();setInterval(refresh,300);
 </script>

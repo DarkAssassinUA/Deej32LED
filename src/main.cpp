@@ -153,8 +153,46 @@ void loop() {
     }
 
     // Обновляем слайдеры и LED
-    for (int i = 0; i < NUM_SLIDERS; i++) sliders[i].update(now);
-    updateStatusLeds();
+    static unsigned long lastActivity = millis();
+    bool faderMoved = false;
+
+    for (int i = 0; i < NUM_SLIDERS; i++) {
+        int oldPos = sliders[i].avgPos;
+        sliders[i].update(now);
+        if (abs(sliders[i].avgPos - oldPos) > 10) faderMoved = true;
+    }
+
+    if ((now - lastWsActivity < 3000) || faderMoved) {
+        lastActivity = now;
+        if (deviceAsleep) {
+            deviceAsleep = false; 
+            Serial.println("[SYSTEM] Waking up from sleep.");
+        }
+    }
+
+    unsigned long inactiveTime = now - lastActivity;
+    uint8_t targetBrt = globalBrightness;
+
+    if (inactiveTime >= 120000) {
+        targetBrt = 0;
+        if (!deviceAsleep) {
+            deviceAsleep = true;
+            Serial.println("[SYSTEM] No connection / activity for 2 mins. Sleeping...");
+        }
+    } else {
+        // Плавно гасим в течение всех 2 минут (120000 мс)
+        targetBrt = map(inactiveTime, 0, 120000, globalBrightness, 0);
+        deviceAsleep = false;
+    }
+
+    FastLED.setBrightness(targetBrt);
+
+
+    if (deviceAsleep) {
+        FastLED.clear();
+    } else {
+        updateStatusLeds();
+    }
     FastLED.show();
 
     // Отправка данных в WebSocket и Serial
@@ -171,11 +209,18 @@ void loop() {
                 stateChanged  = true;
             }
             int deejVal = isMuted[i] ? 0 : sliders[i].avgPos;
-            deejData += String(deejVal) + (i < NUM_SLIDERS - 1 ? "|" : "");
+            deejData += String(deejVal) + "|";
         }
         Serial.println(deejData);
 
-        if (ws.count() > 0 && stateChanged) sendWsState();
+        bool anyGesture = false;
+        static bool lastBak[NUM_SLIDERS] = {};
+        static bool lastCon[NUM_SLIDERS] = {};
+        for (int i = 0; i < NUM_SLIDERS; i++) {
+            if (virtualBtnToggle[i] != lastBak[i]) { lastBak[i] = virtualBtnToggle[i]; anyGesture = true; }
+            if (virtualConToggle[i] != lastCon[i]) { lastCon[i] = virtualConToggle[i]; anyGesture = true; }
+        }
+        if (ws.count() > 0 && (stateChanged || anyGesture)) sendWsState();
 
         static unsigned long lastCleanup = 0;
         if (now - lastCleanup >= 1000) {

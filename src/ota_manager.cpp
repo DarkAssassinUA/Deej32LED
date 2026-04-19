@@ -24,9 +24,14 @@ void setupOTA() {
         if (pct != lastPct) {
             lastPct = pct;
             Serial.printf("[OTA] %u%%\r", pct);
-            int lit = map(pct, 0, 100, 0, LEDS_PER_SEG);
-            for (int i = 0; i < LEDS_PER_SEG; i++)
-                leds[i] = (i < lit) ? CRGB(0, 80, 255) : CRGB::Black;
+            float ledFloat = (progress * (float)LEDS_PER_SEG) / total;
+            int lit = (int)ledFloat;
+            int frac = (ledFloat - lit) * 255;
+            for (int i = 0; i < LEDS_PER_SEG; i++) {
+                if (i < lit) leds[i] = CRGB::White;
+                else if (i == lit) leds[i] = CRGB(frac, frac, frac);
+                else leds[i] = CRGB::Black;
+            }
             FastLED.show();
         }
     });
@@ -55,10 +60,14 @@ void startCloudOTA(String url) {
     httpUpdate.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS); // GitHub переадресует на AWS
     
     httpUpdate.onProgress([](int curr, int total) {
-        int pct = curr * 100 / (total > 0 ? total : 1);
-        int lit = map(pct, 0, 100, 0, LEDS_PER_SEG);
-        for (int i = 0; i < LEDS_PER_SEG; i++)
-            leds[i] = (i < lit) ? CRGB(200, 150, 0) : CRGB::Black; // Оранжевая полоса при загрузке с облака
+        float ledFloat = (curr * (float)LEDS_PER_SEG) / (total > 0 ? total : 1);
+        int lit = (int)ledFloat;
+        int frac = (ledFloat - lit) * 255;
+        for (int i = 0; i < LEDS_PER_SEG; i++) {
+            if (i < lit) leds[i] = CRGB::White;
+            else if (i == lit) leds[i] = CRGB(frac, frac, frac);
+            else leds[i] = CRGB::Black;
+        }
         FastLED.show();
     });
 

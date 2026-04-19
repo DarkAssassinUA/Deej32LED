@@ -3,33 +3,33 @@
 
 // ============================================================
 // СТАТУС-ИНДИКАЦИЯ СВЕТОДИОДАМИ
-//  • AP mode (нет WiFi) → сег 0 и 4 мигают красным ~30%
-//  • WiFi есть, нет WS  → сег 1 и 3 мигают синим
-//  • WS подключён        → ничего не трогаем (слайдеры рисуют сами)
 // ============================================================
 void updateStatusLeds() {
-    static unsigned long lastToggle = 0;
-    static bool          blinkOn    = false;
-
     unsigned long now = millis();
-    if (now - lastToggle >= 500) {
-        lastToggle = now;
-        blinkOn    = !blinkOn;
+    bool noWifi = apMode || (WiFi.status() != WL_CONNECTED);
+    bool noApp  = (now - lastWsActivity > 3000);
+
+    // Плавная пульсация (около 20 ударов в минуту, от 10_ до 255 яркости)
+    uint8_t breath = beatsin8(20, 10, 255); 
+
+    // Если нет связи (либо WiFi, либо вебсокет) — гасим все фейдеры, кроме индикационных
+    if (noWifi || noApp) {
+        fill_solid(leds, TOTAL_LEDS, CRGB::Black);
     }
 
-    if (apMode) {
-        CRGB redCol = blinkOn ? CRGB(77, 0, 0) : CRGB::Black;
+    // 1) Нет WiFi -> 2-й фейдер мигает синим
+    if (noWifi) {
+        CRGB blueCol = CRGB(0, 0, breath);
         for (int i = 0; i < LEDS_PER_SEG; i++) {
-            leds[i]                                        = redCol; // сег 0
-            leds[(NUM_SLIDERS - 1) * LEDS_PER_SEG + i]   = redCol; // сег 4
+            leds[1 * LEDS_PER_SEG + i] = blueCol;
         }
-        for (int i = LEDS_PER_SEG; i < (NUM_SLIDERS - 1) * LEDS_PER_SEG; i++)
-            leds[i] = CRGB::Black;
-    } else if (ws.count() == 0) {
-        CRGB blueCol = blinkOn ? CRGB(0, 0, 200) : CRGB::Black;
+    }
+
+    // 2) Нет Deej/Bridge -> 3-й фейдер мигает фиолетовым
+    if (!noWifi && noApp) {
+        CRGB purpleCol = CRGB(breath / 2, 0, breath);
         for (int i = 0; i < LEDS_PER_SEG; i++) {
-            leds[1 * LEDS_PER_SEG + i] = blueCol; // сег 1
-            leds[3 * LEDS_PER_SEG + i] = blueCol; // сег 3
+            leds[2 * LEDS_PER_SEG + i] = purpleCol;
         }
     }
 }

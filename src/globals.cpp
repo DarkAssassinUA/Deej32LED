@@ -50,6 +50,10 @@ volatile bool pendingStateApply = false;
 int           pendingVol[NUM_SLIDERS];
 bool          pendingMute[NUM_SLIDERS];
 int           currentVol[NUM_SLIDERS];
+bool          virtualBtnToggle[NUM_SLIDERS] = {};
+bool          virtualConToggle[NUM_SLIDERS] = {};
+bool          deviceAsleep = false;
+unsigned long lastWsActivity = 0;
 
 const unsigned long WS_SEND_INTERVAL_MS = 100;
 

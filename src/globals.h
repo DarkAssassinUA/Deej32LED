@@ -59,6 +59,10 @@ extern volatile bool pendingStateApply;
 extern int           pendingVol[NUM_SLIDERS];
 extern bool          pendingMute[NUM_SLIDERS];
 extern int           currentVol[NUM_SLIDERS];
+extern bool          virtualBtnToggle[NUM_SLIDERS]; // bak: жест ↑→↓ по каналу
+extern bool          virtualConToggle[NUM_SLIDERS]; // con: жест ↓→↑ по каналу
+extern bool          deviceAsleep;                  // спит ли устройство (отключение LED)
+extern unsigned long lastWsActivity;
 
 // FastLED
 extern CRGB leds[TOTAL_LEDS];

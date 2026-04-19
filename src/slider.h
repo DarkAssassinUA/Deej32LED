@@ -23,6 +23,13 @@ public:
   unsigned long peakHeldAt = 0;     // когда пик был обновлён
   unsigned long lastDecayAt= 0;     // последний такт убывания
 
+  // Жест 1: вверх → вниз (bak)
+  unsigned long timeAtTop      = 0;
+  bool          waitingForDown = false;
+  // Жест 2: вниз → вверх (con)
+  unsigned long timeAtBottom   = 0;
+  bool          waitingForUp   = false;
+
   void init(int index) {
     id = index;
     readIndex = 0;
@@ -44,8 +51,40 @@ public:
     readIndex = (readIndex + 1) % globalSmoothing;
     int rawAvg = total / globalSmoothing;
     avgPos = constrain(map(rawAvg, 8, 1015, 0, 1023), 0, 1023);
+
+    // ── Жесты: id=0 (↑↓=Prev), id=2 (↑↓=Play, ↓↑=Play), id=4 (↑↓=Next) ──
+    if (id == 0 || id == 2 || id == 4) {
+      // Жест ↑→↓
+      if (avgPos > 850) {
+        if (!waitingForDown) { waitingForDown = true; timeAtTop = now; }
+      } else if (waitingForDown) {
+        if ((now - timeAtTop < 1200) && (avgPos < 500)) {
+          virtualBtnToggle[id] = !virtualBtnToggle[id];
+          waitingForDown       = false;
+          Serial.printf("[GESTURE↑↓] ch%d\n", id);
+        } else if (now - timeAtTop >= 1200) {
+          waitingForDown = false;
+        }
+      }
+
+      // Жест ↓→↑ для id=0,2,4
+      if (avgPos < 170) {
+        if (!waitingForUp) { waitingForUp = true; timeAtBottom = now; }
+      } else if (waitingForUp) {
+        if ((now - timeAtBottom < 1200) && (avgPos > 523)) {
+          virtualConToggle[id] = !virtualConToggle[id];
+          waitingForUp         = false;
+          Serial.printf("[GESTURE↓↑] ch%d\n", id);
+        } else if (now - timeAtBottom >= 1200) {
+          waitingForUp = false;
+        }
+      }
+
+    }
+
     render(now);
   }
+
 
   void render(unsigned long now) {
     int  sliderLimit = map(avgPos, 0, 1023, 0, LEDS_PER_SEG);

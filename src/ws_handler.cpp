@@ -10,13 +10,13 @@ void sendWsState(AsyncWebSocketClient *client) {
     doc["type"] = "update";
     JsonArray vol  = doc["vol"].to<JsonArray>();
     JsonArray mute = doc["mute"].to<JsonArray>();
-    JsonArray bak  = doc["bak"].to<JsonArray>();
-    JsonArray con  = doc["con"].to<JsonArray>();
+    JsonArray bak  = doc["gbak"].to<JsonArray>();
+    JsonArray con  = doc["gcon"].to<JsonArray>();
     for (int i = 0; i < NUM_SLIDERS; i++) {
         vol.add(currentVol[i]);
         mute.add(isMuted[i]);
-        bak.add(false);
-        con.add(false);
+        bak.add(virtualBtnToggle[i]);
+        con.add(virtualConToggle[i]);
     }
     String out;
     serializeJson(doc, out);
@@ -31,6 +31,8 @@ void handleWsMessage(uint8_t *data, size_t len) {
     JsonDocument doc;
     if (deserializeJson(doc, data, len) != DeserializationError::Ok) return;
 
+    lastWsActivity = millis();
+    
     const char *type = doc["type"] | "";
 
     if (strcmp(type, "config") == 0) {
