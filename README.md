@@ -41,10 +41,12 @@ Each slider controls the volume of a physical or virtual audio channel. The LEDs
 - **12 color themes** — apply an individual theme to each channel or a global one to all of them at once from the dashboard.
 - **VU-meter (Equalizer)** — optional sound level overlay received from the PC (via `vu` WebSocket messages).
 - **Boot animation** — a beautiful fading rainbow effect upon powering on.
-- **Status indicators** — the strip turns off and uses indicator faders upon connection loss:
-  - If there is **no Wi-Fi**, the 2nd fader breathes in Blue.
-  - If the **client is not connected (DeejNG/Bridge)**, the 3rd fader breathes in Purple.
-  - During **OTA downloads via GitHub**, the 1st fader smoothly fills up with White proportional to the progress.
+- **Status and Update Indicators** — the general strip turns off and specific faders are used to display important device states:
+  - 🔵 **No Wi-Fi Connection** — the 2nd fader slowly breathes in Blue.
+  - 🟣 **No PC Client connected (DeejNG / Bridge)** — the 3rd fader slowly breathes in Purple.
+  - ⚪ **OTA Updates (via GitHub / PlatformIO)** — the 1st fader acts as a progress bar, smoothly filling up with **White**.
+  - 🟢 **Local OTA Updates (via Web UI)** — the 1st fader acts as a progress bar, smoothly filling up with **Green**.
+  - 🔴 **First Boot / Setup Mode (Captive Portal)** — the edge LEDs blink in Red to indicate waiting for configuration.
 
 ## Screenshots
 
